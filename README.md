@@ -25,3 +25,9 @@ Please install `exiftool` on your Mac before proceeding further. An easy way to 
 * Images for which crop information has been found in the raw file's metadata will be cropped accordingly.
 * Images without recognizable crop information will be left unaffected.
 * A progress bar will appear while each image is being processed.
+
+## Tested Cameras
+I have tested this script with the following cameras so far:
+* **Leica SL2-S** (APS-C mode = 1.5x crop on/off)
+* **Fujifilm X100VI** (Digital Teleconverter modes)
+* **Sony Alpha 7C II** (does not require this script since Capture One natively crops images in ARW files from this camera)
