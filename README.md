@@ -29,5 +29,6 @@ Please install `exiftool` on your Mac before proceeding further. An easy way to 
 ## Tested Cameras
 I have tested this script with the following cameras so far:
 * **Leica SL2-S** (APS-C mode = 1.5x crop on/off)
-* **Fujifilm X100VI** (Digital Teleconverter modes)
+* **Fujifilm X100VI** (crop via "Digital Teleconverter" feature)
+* **Fujifilm GFX 50R, GFX 100, GFX 100RF** (crop via "Aspect Ratio" feature)
 * **Sony Alpha 7C II** (does not require this script since Capture One natively crops images in ARW files from this camera)
