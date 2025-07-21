@@ -2,7 +2,8 @@
 -- and apply the corresponding crop in Capture One if necessary.
 --
 -- Author: Guido H
--- Version 1.0, November 2024
+-- * Version 1.0, November 2024
+-- * Version 1.1, July 2025
 -- Released under GNU GPL 3.0
 
 tell application "Capture One"
@@ -24,12 +25,15 @@ tell application "Capture One"
 			set imgSize to (get dimensions of parentImage)
 			set imgWidth to (item 1 of imgSize)
 			set imgHeight to (item 2 of imgSize)
+
+			-- Get orientation of image
+			set imgOrientation to (get orientation of (get adjustments of variantItem))
 			
 			-- Get path of raw file
 			set imagePath to (get path of (get parent image of variantItem))
 			
 			-- Extract all relevant EXIF data from the raw file (some requested fields will be missing depending on the camera model)
-			set commandLine to "eval `/usr/libexec/path_helper -s`; exiftool -X -RAF:RawImageCroppedSize -RAF:RawZoomActive -RAF:RawZoomTopLeft -RAF:RawZoomSize -SubIFD:DefaultUserCrop \"" & imagePath & "\""
+			set commandLine to "eval `/usr/libexec/path_helper -s`; exiftool -X -RAF:RawImageAspectRatio -RAF:RawZoomActive -RAF:RawZoomTopLeft -RAF:RawZoomSize -SubIFD:DefaultUserCrop \"" & imagePath & "\""
 			set xmlExif to (do shell script commandLine)
 			
 			tell application "System Events"
@@ -55,7 +59,44 @@ tell application "Capture One"
 					set cropFlag to "Yes"
 				end try
 				
-				-- Try to extract crop information for FujiFilm cameras
+				-- Try to extract aspect ratio information for FujiFilm GFX cameras
+				if (cropFlag is "?") then
+					try
+						-- Aspect ratio in the form "A:B", e.g. "3:2"
+						set aspect to my theSplit(value of XML element "RAF:RawImageAspectRatio" of xmlData, ":")
+						set oldRatio to imgWidth / imgHeight
+						set newRatio to (item 1 of aspect) / (item 2 of aspect)
+
+						-- Rotate crop to match image orientation if necessary by inverting the aspect ratio
+						if (imgOrientation is 0) or (imgOrientation is 180) then
+							set newRatio to (item 1 of aspect) / (item 2 of aspect)
+						else
+							set newRatio to (item 2 of aspect) / (item 1 of aspect)
+						end if
+
+						-- Initialize cropped width and height
+						set cropW to imgWidth
+						set cropH to imgHeight
+
+						-- Determine if we need to crop based on width or height
+						if oldRatio > newRatio then
+						    -- Image is wider than desired aspect ratio, crop width
+						    set cropW to round (imgHeight * newRatio)
+						else if oldRatio < newRatio then
+						    -- Image is taller than desired aspect ratio, crop height
+						    set cropH to round (imgWidth / newRatio)
+						end if
+
+						-- Center cropped image
+						set cropX to (imgWidth div 2)
+						set cropY to (imgHeight div 2)
+						set cropFlag to "Yes"
+					on error
+						set cropFlag to "?"
+					end try
+				end if
+
+				-- Try to extract crop information for FujiFilm X cameras
 				-- Tested with FujiFilm X100VI (Digital Teleconverter Modes)
 				if (cropFlag is "?") then
 					try
